@@ -1,0 +1,32 @@
+#include <WiFiUdp.h>
+
+uint8_t result[HASH_SIZE];
+char udpBuffer[512];
+
+const char *udpAddress = "192.168.88.128";
+const int udpPort = 53878;
+WiFiUDP udp;
+
+void handleUdp() {
+  if (WiFi.status() == WL_CONNECTED) {
+
+    size_t size = udp.parsePacket();
+
+    if (size > HASH_SIZE) {
+      udp.read(udpBuffer, 1024);
+
+      hmac<SHA256>(result, HASH_SIZE, key, strlen(key),
+                   udpBuffer + HASH_SIZE, size - HASH_SIZE);
+
+      udp.beginPacket(udpAddress, udpPort);
+      // Check the result.
+      if (!memcmp(result, udpBuffer, HASH_SIZE))
+        udp.printf("Passed");
+      else {
+        udp.printf("Failed, HMAC:");
+        udp.write(result, HASH_SIZE);
+      }
+      udp.endPacket();
+    }
+  }
+}
