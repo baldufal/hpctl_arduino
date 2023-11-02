@@ -58,8 +58,8 @@ bool setupTwi() {
 
 static int lastTwiUpdate = 0;
 void handleTwi() {
-  if (twiError) {
-    twiError = !setupTwi();
+  if (i2cError) {
+    i2cError = !setupTwi();
     return;
   }
 
@@ -105,7 +105,7 @@ void handleTwi() {
   if (!read_successfull || !write_successfull) {
     Serial.println("Read or write error");
     i2cDirty = true;
-    twiError = !setupTwi();
+    i2cError = !setupTwi();
     return;
   }
 

@@ -46,13 +46,16 @@ static MCState nextState = { 0, 0, 0, 0, 0 };
 static bool i2cDirty = true;
 static bool guiDirty = true;
 void stateChanged() {
+  // Disable heating if ventilation is off
+  if (nextState.vent_in == 0)
+    nextState.heating = 0;
   i2cDirty = true;
   guiDirty = true;
 }
 
 // True iff there was a problem accessing i2c last time
 // Prevents getting stuck in i2c routine
-static bool twiError = true;
+static bool i2cError = true;
 
 uint64_t millis64() {
   static uint32_t low32, high32;
@@ -67,7 +70,7 @@ void setup(void) {
 
   setupButtons();
   setupGui();
-  twiError = !setupTwi();
+  i2cError = !setupTwi();
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);

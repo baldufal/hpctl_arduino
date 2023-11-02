@@ -93,7 +93,7 @@ void handleGui() {
     }
     tft.drawString("WiFi", 0, lineStatus * lineHeight, GFXFF);
 
-    if (twiError) {
+    if (i2cError) {
       tft.setTextColor(TFT_RED);
     } else {
       if (i2cDirty) {

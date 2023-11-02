@@ -58,7 +58,7 @@ void registerWebserverAPI() {
     doc["ventin"] = currentState.vent_in;
     doc["ventout"] = currentState.vent_out;
     doc["inputs"] = currentState.inputs;
-    doc["i2c_error"] = twiError;
+    doc["i2c_error"] = i2cError;
     doc["i2c_dirty"] = i2cDirty;
     doc["uptime"] = millis();
     doc["nonce"] = nonce;
@@ -187,7 +187,7 @@ void handleRoot() {
     <p>" NIBBLE_TO_BINARY_PATTERN "</p>\
   </body>\
   </html>",
-           twiError ? "true" : "false",
+           i2cError ? "true" : "false",
            i2cDirty ? "true" : "false",
            WiFi.localIP().toString().c_str(),
            WiFi.RSSI(),
