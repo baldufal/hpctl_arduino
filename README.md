@@ -1,4 +1,4 @@
-# hpctl_arduino
+# HPCTL Arduino
 Arduino software for Lilygo T-Display-S component of HPCTL heating and ventilation controller.
 
 We use this mc to control another mc (AVR) on a custon PCB via I2C.
