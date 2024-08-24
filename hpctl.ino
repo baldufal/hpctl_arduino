@@ -21,6 +21,11 @@ static uint32_t nonce;
 // Wifi
 static const char *ssid = WIFI_SSID;
 static const char *password = WIFI_PASSWORD;
+IPAddress staticIP(192, 168, 88, 32);
+IPAddress gateway(192, 168, 88, 20);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress dns(192, 168, 88, 20);
+static const char* hostname = "esp32-hpctl";
 
 // REST
 WebServer server(80);
@@ -67,14 +72,18 @@ uint64_t millis64() {
 
 void setup(void) {
   Serial.begin(115200);
+  Serial.println("");
 
   setupButtons();
   setupGui();
   i2cError = !setupTwi();
 
   WiFi.mode(WIFI_STA);
+  if (WiFi.config(staticIP, gateway, subnet, dns, dns) == false) {
+    Serial.println("WiFi configuration failed.");
+  }
+  WiFi.setHostname(hostname);
   WiFi.begin(ssid, password);
-  Serial.println("");
 
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
