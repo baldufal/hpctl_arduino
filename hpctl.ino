@@ -107,9 +107,42 @@ void setup(void) {
   Serial.println("HTTP server started");
 }
 
+void ensureWiFiConnection() {
+  static unsigned long lastWiFiCheck = 0;
+  unsigned long currentMillis = millis();
+  if (currentMillis - lastWiFiCheck < 300000) {  // Check every 5 minutes
+    return;
+  }
+  lastWiFiCheck = currentMillis;
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi connection lost. Attempting to reconnect...");
+    handleGuiNoWifi();
+    WiFi.disconnect();
+    WiFi.begin(ssid, password);
+
+    // Wait for connection
+    int retryCount = 0;
+    while (WiFi.status() != WL_CONNECTED && retryCount < 10) {
+      delay(1000);
+      Serial.print(".");
+      retryCount++;
+    }
+
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("Reconnected to WiFi!");
+      Serial.print("IP address: ");
+      Serial.println(WiFi.localIP());
+    } else {
+      Serial.println("Failed to reconnect to WiFi.");
+    }
+  }
+}
+
 void loop(void) {
   handleButtons();
   server.handleClient();
   handleTwi();
   handleGui();
+  ensureWiFiConnection();
 }
