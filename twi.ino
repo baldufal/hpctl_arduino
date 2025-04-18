@@ -47,7 +47,7 @@ bool setupTwi() {
   i2c_dev = Adafruit_I2CDevice(I2C_ADDRESS, &twi);
 
   heater_reg = Adafruit_BusIO_Register(&i2c_dev, 0);
-  vent_in_reg = Adafruit_BusIO_Register(&i2c_dev, 1);
+  vent_in_reg = Adafruit_BusIO_Register(&i2c_dev, 1); // in and out are swapped
   vent_out_reg = Adafruit_BusIO_Register(&i2c_dev, 2);
   ssrs_reg = Adafruit_BusIO_Register(&i2c_dev, 3);
   checksum_reg = Adafruit_BusIO_Register(&i2c_dev, 4);
@@ -72,16 +72,16 @@ void handleTwi() {
 
   bool write_successfull = true;
   write_successfull &= heater_reg.write(&nextState.heating, 1);
-  write_successfull &= vent_in_reg.write(&nextState.vent_in, 1);
-  write_successfull &= vent_out_reg.write(&nextState.vent_out, 1);
-  nextState.ssrs &= 0b00011111;  // Top 3 bits reserved for heaters
+  write_successfull &= vent_in_reg.write(&nextState.vent_out, 1); // in and out are swapped
+  write_successfull &= vent_out_reg.write(&nextState.vent_in, 1);
+  nextState.ssrs &= 0b00010111;  // Top 3 bits reserved for heaters, 3rd bit is determined by vent_in PWM
   write_successfull &= ssrs_reg.write(&nextState.ssrs, 1);
 
   MCState read_data = { 0, 0, 0, 0, 0 };
   bool read_successfull = true;
   read_successfull &= heater_reg.read(&read_data.heating);
-  read_successfull &= vent_in_reg.read(&read_data.vent_in);
-  read_successfull &= vent_out_reg.read(&read_data.vent_out);
+  read_successfull &= vent_in_reg.read(&read_data.vent_out); // in and out are swapped
+  read_successfull &= vent_out_reg.read(&read_data.vent_in);
   read_successfull &= ssrs_reg.read(&read_data.ssrs);
   uint8_t checksum = 0;
   read_successfull &= checksum_reg.read(&checksum, 1);

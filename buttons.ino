@@ -3,8 +3,8 @@
 
 #define CURSOR_POS_LEVELS 8
 #define HEATING_LEVELS 31
-#define VENT_IN_LEVELS 7
-#define VENT_OUT_LEVELS 5
+#define VENT_IN_LEVELS 256
+#define VENT_OUT_LEVELS 7
 
 // {Built in, Next, Prev, Plus, Minus}
 static uint buttonPins[] = { 14, 10, 11, 12, 13 };
@@ -68,7 +68,19 @@ void handleButtons() {
                   stateChanged();
                   break;
                 case 1:
-                  nextState.vent_in = (nextState.vent_in + 1) % VENT_IN_LEVELS;
+                  if(nextState.vent_in == 255){
+                    nextState.vent_in = 0;
+                  }else{
+                    if(nextState.vent_in >= 245){
+                      nextState.vent_in = 255;
+                    }else{
+                      if(nextState.vent_in == 0){
+                        nextState.vent_in = 30;
+                      }else{
+                      nextState.vent_in += 10;
+                      }
+                    }
+                  }
                   stateChanged();
                   break;
                 case 2:
@@ -92,9 +104,19 @@ void handleButtons() {
                   stateChanged();
                   break;
                 case 1:
-                  if (nextState.vent_in == 0)
-                    nextState.vent_in = VENT_IN_LEVELS;
-                  nextState.vent_in = (nextState.vent_in - 1) % VENT_IN_LEVELS;
+                  if(nextState.vent_in == 0){
+                    nextState.vent_in = 255;
+                  }else{
+                    if(nextState.vent_in <= 30){
+                      nextState.vent_in = 0;
+                    }else{
+                      if(nextState.vent_in <=40){
+                        nextState.vent_in = 30;
+                      }else{
+                        nextState.vent_in -= 10;
+                      }
+                    }
+                  }
                   stateChanged();
                   break;
                 case 2:

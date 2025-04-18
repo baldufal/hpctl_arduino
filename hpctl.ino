@@ -15,16 +15,16 @@
 // Crypto parameters
 #define HASH_SIZE 32
 #define BLOCK_SIZE 64
-static const char *key = KEY;
+static const char *key = KEY; // secrets.h
 static uint32_t nonce;
 
 // Wifi
 static const char *ssid = WIFI_SSID;
 static const char *password = WIFI_PASSWORD;
-IPAddress staticIP(192, 168, 88, 32);
-IPAddress gateway(192, 168, 88, 20);
+IPAddress staticIP(192, 168, 89, 32);
+IPAddress gateway(192, 168, 89, 1);
 IPAddress subnet(255, 255, 255, 0);
-IPAddress dns(192, 168, 88, 20);
+IPAddress dns(192, 168, 89, 1);
 static const char* hostname = "esp32-hpctl";
 
 // REST
@@ -33,13 +33,18 @@ WebServer server(80);
 struct MCState {
   // Heater level 0..30
   uint8_t heating;
-  // Ventilation in level 0..6
+
+  // Ventilation in level 0..255
   uint8_t vent_in;
-  // Ventilation out level 0..4
+
+  // Ventilation out level 0..6
   uint8_t vent_out;
+
   // Binary state of SSR0...SSR7
+  // SSR3 is determined from vent_in
   // SSR5..SSR7 are set by heating
   uint8_t ssrs;
+
   // Input values. Are not written to mC but read from it.
   uint8_t inputs;
 };
@@ -51,9 +56,13 @@ static MCState nextState = { 0, 0, 0, 0, 0 };
 static bool i2cDirty = true;
 static bool guiDirty = true;
 void stateChanged() {
+  // We do not allow PWM values < 30 because the ventilator cannot start then
   // Disable heating if ventilation is off
-  if (nextState.vent_in == 0)
+  if (nextState.vent_in < 30){
+    nextState.vent_in = 0;
     nextState.heating = 0;
+  }
+    
   i2cDirty = true;
   guiDirty = true;
 }
@@ -86,10 +95,12 @@ void setup(void) {
   WiFi.begin(ssid, password);
 
   // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
+  int retryCount = 0;
+  while (WiFi.status() != WL_CONNECTED && retryCount < 10) {
     delay(1000);
     Serial.printf("Attempting to connect to %s\n", ssid);
     handleGuiNoWifi();
+    retryCount++;
   }
 
   Serial.print("IP address: ");
@@ -110,7 +121,7 @@ void setup(void) {
 void ensureWiFiConnection() {
   static unsigned long lastWiFiCheck = 0;
   unsigned long currentMillis = millis();
-  if (currentMillis - lastWiFiCheck < 300000) {  // Check every 5 minutes
+  if (currentMillis - lastWiFiCheck < 180000) {  // Check every 3 minutes
     return;
   }
   lastWiFiCheck = currentMillis;
@@ -123,7 +134,7 @@ void ensureWiFiConnection() {
 
     // Wait for connection
     int retryCount = 0;
-    while (WiFi.status() != WL_CONNECTED && retryCount < 10) {
+    while (WiFi.status() != WL_CONNECTED && retryCount < 5) {
       delay(1000);
       Serial.print(".");
       retryCount++;

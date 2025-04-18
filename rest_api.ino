@@ -113,9 +113,12 @@ void registerWebserverAPI() {
       uint8_t value = doc["ssrs"];
       uint8_t mask = 127;
 
-      if (doc["ssrmask"].is<unsigned short>() && doc["ssrmask"] < 32) {
-        processed += " ssrmask";
-        mask = doc["ssrmask"];
+      if (doc["ssrmask"].is<unsigned short>()) {
+        uint8_t tempMask = doc["ssrmask"];
+        if ((tempMask & 0b11101000) == 0) {  // Bits 7..5 and 3 must not be set
+          processed += " ssrmask";
+          mask = tempMask;
+          }
       }
 
       nextState.ssrs &= ~mask;
@@ -130,14 +133,14 @@ void registerWebserverAPI() {
       stateChanged();
     }
 
-    if (doc["ventin"].is<unsigned short>() && doc["ventin"] <= 6) {
+    if (doc["ventin"].is<unsigned short>() && (doc["ventin"] == 0 || doc["ventin"] >= 30)) {
       processed += " ventin";
       uint8_t value = doc["ventin"];
       nextState.vent_in = value;
       stateChanged();
     }
 
-    if (doc["ventout"].is<unsigned short>() && doc["ventout"] <= 4) {
+    if (doc["ventout"].is<unsigned short>() && doc["ventout"] <= 6) {
       processed += " ventout";
       uint8_t value = doc["ventout"];
       nextState.vent_out = value;
